@@ -1,0 +1,3 @@
+git+git://github.com/mongodb/mongo-python-driver@3.0-dev
+mockupdb
+mongo-orchestration==0.1
