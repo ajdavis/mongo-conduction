@@ -27,18 +27,18 @@ commands straightforwardly::
 
     Conduction:PRIMARY> var info = db.runCommand({
     ...    post:'/servers',
-    ...    body: {name: "mongod", preset: "basic.json"}
+    ...    body: {id: "my_id", preset: "basic.json"}
     ... })
     Conduction:PRIMARY> info
     {
         "links" : [
             {
-                "href" : "/v1/servers/f38a4d1c-815e-4daf-9744-960a25bf16f4",
+                "href" : "/v1/servers/my_id",
                 "method" : "DELETE",
                 "rel" : "delete-server"
             },
             {
-                "href" : "/v1/servers/f38a4d1c-815e-4daf-9744-960a25bf16f4",
+                "href" : "/v1/servers/my_id",
                 "method" : "GET",
                 "rel" : "get-server-info"
             }
@@ -47,32 +47,16 @@ commands straightforwardly::
     	"mongodb_uri" : "mongodb://127.0.0.1:1027",
     }
 
-Find the link for server info::
+The "/v1" path prefix is optional. Get server info::
 
-    Conduction:PRIMARY> info_link = info.links.filter(function(link) {
-    ...    return link.rel == "get-server-info";
-    ... })[0]
+    Conduction:PRIMARY> db.runCommand({get: "/servers/my_id"})
     {
-        "href" : "/v1/servers/f38a4d1c-815e-4daf-9744-960a25bf16f4",
-        "method" : "GET",
-        "rel" : "get-server-info"
-    }
-    Conduction:PRIMARY> db.runCommand({get: info_link.href})
-    {
-        "procInfo" : {
-            // ... lots of info ...
-        }
+        // ... lots of info ...
     }
 
 Shut a server down::
 
-    Conduction:PRIMARY> delete_link = info.links.filter(function(link) { return link.rel == "delete-server"; })[0]
-    {
-        "href" : "/v1/servers/f38a4d1c-815e-4daf-9744-960a25bf16f4",
-        "method" : "DELETE",
-        "rel" : "delete-server"
-    }
-    Conduction:PRIMARY> db.runCommand({delete: delete_link.href})
+    Conduction:PRIMARY> db.runCommand({delete: "/servers/my_id"})
     { "ok" : 1 }
 
 Contents:
