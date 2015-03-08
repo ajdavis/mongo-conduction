@@ -108,47 +108,70 @@ def reply(method, path):
 METHODS = set(['get', 'post', 'put', 'delete'])
 
 
-def main():
-    args = parse_args()
-    mongo_orchestration.server.setup(getattr(args, 'releases', {}), args.env)
-    mockup = mockupdb.interactive_server(port=args.port, verbose=args.verbose,
+def main_loop(mockup):
+    """Take a running MockupDB server and respond to commands.
+
+    The loop runs forever. Exit with mockup.stop() from another thread.
+    """
+    assert mockup.port, "Call run() on the MockupDB first"
+    for req in mockup:
+        if req.matches(Command) and req.command_name.lower() in METHODS:
+            try:
+                # Request is like: {get: "/servers"}
+                # Or: {post: "/servers", body: {preset: "basic.json"}}
+                method = req.command_name.lower()
+                path = req.doc[req.command_name]
+                body = req.doc.get('body', '{}')
+
+                # Trick Bottle into thinking the wire protocol command's
+                # "body" subdocument is a JSON string that is the HTTP
+                # POST body.
+                body_json_sio = StringIO(json_util.dumps(body))
+                environ = {
+                    'REQUEST_METHOD': method.upper(),
+                    'PATH_INFO': path,
+                    'wsgi.input': body_json_sio,
+                    'bottle.request.body': body_json_sio
+                }
+                result = bottle_app._handle(environ)
+                if isinstance(result, Exception):
+                    raise result
+                reply_doc = json.loads(result or '{}')
+
+                if isinstance(reply_doc, list):
+                    # Traceback.
+                    req.command_err(errmsg='Conduction error',
+                                    traceback=reply_doc)
+                else:
+                    req.ok(reply_doc)
+            except bottle.HTTPError as error:
+                req.command_err(errmsg=error.status_line)
+            except Exception as error:
+                req.command_err(errmsg=repr(error))
+        else:
+            req.command_err(errmsg='unrecognized: %s' % req)
+
+
+def get_mockup(releases, env, port, verbose):
+    mongo_orchestration.server.setup(releases, env)
+    mockup = mockupdb.interactive_server(port=port, verbose=verbose,
                                          all_ok=False, name='Conduction')
 
     # Override the existing buildinfo responder.
     mockup.autoresponds('buildinfo', version='Conduction ' + __version__)
+    return mockup
+
+
+def main():
+    args = parse_args()
+    mockup = get_mockup(getattr(args, 'releases', {}),
+                        args.env,
+                        args.port,
+                        args.verbose)
     mockup.run()
+    print('listening on %s' % mockup.uri)
     try:
-        print('listening on %s' % mockup.uri)
-        for req in mockup:
-            if req.matches(Command) and req.command_name.lower() in METHODS:
-                try:
-                    # Request is like: {get: "/servers"}
-                    # Or: {post: "/servers", body: {preset: "basic.json"}}
-                    method = req.command_name.lower()
-                    path = req.doc[req.command_name]
-                    body = req.doc.get('body', '{}')
-
-                    # Trick Bottle into thinking the wire protocol command's
-                    # "body" subdocument is a JSON string that is the HTTP
-                    # POST body.
-                    body_json_sio = StringIO(json_util.dumps(body))
-                    environ = {'bottle.request.body': body_json_sio}
-                    bottle.request.bind(environ)
-
-                    # TODO: somehow we're not catching 404s.
-                    reply_doc = reply(method, path)
-                    if isinstance(reply_doc, list):
-                        # Traceback.
-                        req.command_err(errmsg='Conduction error',
-                                        traceback=reply_doc)
-                    else:
-                        req.ok(reply_doc)
-                except bottle.HTTPError as error:
-                    req.command_err(errmsg=error.status_line)
-                except Exception as error:
-                    req.command_err(errmsg=repr(error))
-            else:
-                req.command_err(errmsg='unrecognized: %s' % req)
+        main_loop(mockup)
     except KeyboardInterrupt:
         sys.exit()
     finally:
