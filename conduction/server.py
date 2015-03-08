@@ -134,6 +134,8 @@ def main():
                     body_json_sio = StringIO(json_util.dumps(body))
                     environ = {'bottle.request.body': body_json_sio}
                     bottle.request.bind(environ)
+
+                    # TODO: somehow we're not catching 404s.
                     reply_doc = reply(method, path)
                     if isinstance(reply_doc, list):
                         # Traceback.
