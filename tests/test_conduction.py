@@ -26,11 +26,26 @@ class ConductionTest(unittest.TestCase):
         self.addCleanup(self.loop_future)
         self.addCleanup(self.mockup.stop)
 
-        self.conduction = pymongo.MongoClient(self.mockup.uri).test
+        # Any database name will do.
+        self.conduction = pymongo.MongoClient(self.mockup.uri).conduction
+
+    def test_root_uri(self):
+        reply = self.conduction.command('get', '/')
+        self.assertIn('links', reply)
+        self.assertIn('service', reply)
 
     def test_bad_command_name(self):
-        with self.assertRaises(OperationFailure):
+        with self.assertRaises(OperationFailure) as context:
             self.conduction.command('foo')
+
+        self.assertIn('unrecognized: {"foo": 1}',
+                      str(context.exception))
+
+    def test_server_id_404(self):
+        with self.assertRaises(OperationFailure) as context:
+            self.conduction.command({'post': '/v1/servers/'})
+
+        self.assertIn('404 Not Found', str(context.exception))
 
 
 if __name__ == '__main__':
