@@ -20,7 +20,7 @@ requirements = ['bottle', 'pymongo', 'mockupdb', 'mongo-orchestration']
 test_requirements = []
 
 if sys.version_info[:2] == (2, 6):
-    requirements.append('argparse')
+    requirements.extend(['argparse', 'simplejson'])
     test_requirements.append('unittest2')
 
 setup(

@@ -18,7 +18,6 @@
 from __future__ import print_function
 import argparse
 
-import json
 import os
 import sys
 
@@ -26,6 +25,12 @@ if sys.version_info[0] < 3:
     from io import BytesIO as StringIO
 else:
     from io import StringIO
+try:
+    # Need simplejson for the object_pairs_hook option in Python 2.6.
+    import simplejson as json
+except ImportError:
+    # Python 2.7+.
+    import json
 
 import bottle
 import mockupdb
@@ -79,7 +84,7 @@ http://mongo-conduction.readthedocs.org
     try:
         # Read config.
         with open(cli_args.config, 'r') as fd:
-            config = json.loads(fd.read(), object_hook=SON)
+            config = json.loads(fd.read(), object_pairs_hook=SON)
         if 'releases' not in config:
             print("No releases defined in %s" % cli_args.config)
             sys.exit(1)
