@@ -18,7 +18,8 @@ with open('CHANGELOG.rst') as changelog_file:
 requirements = ['bottle', 'pymongo', 'mockupdb', 'mongo-orchestration']
 dependency_links = [
     'git+git://github.com/ajdavis/mongo-mockup-db#egg=mockupdb',
-]
+    'https://github.com/mongodb/mongo-python-driver/archive/3.0b0.tar.gz'
+    '#egg=pymongo']
 
 test_requirements = []
 
