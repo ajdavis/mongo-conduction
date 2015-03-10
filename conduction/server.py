@@ -20,11 +20,8 @@ import argparse
 
 import os
 import sys
+from io import BytesIO
 
-if sys.version_info[0] < 3:
-    from io import BytesIO as StringIO
-else:
-    from io import StringIO
 try:
     # Need simplejson for the object_pairs_hook option in Python 2.6.
     import simplejson as json
@@ -131,7 +128,7 @@ def main_loop(mockup):
                 # Trick Bottle into thinking the wire protocol command's
                 # "body" subdocument is a JSON string that is the HTTP
                 # POST body.
-                body_json_sio = StringIO(json_util.dumps(body))
+                body_json_sio = BytesIO(json_util.dumps(body).encode('ascii'))
                 environ = {
                     'REQUEST_METHOD': method.upper(),
                     'PATH_INFO': path,
