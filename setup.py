@@ -16,6 +16,9 @@ with open('CHANGELOG.rst') as changelog_file:
     changelog = changelog_file.read().replace('.. :changelog:', '')
 
 requirements = ['bottle', 'pymongo', 'mockupdb', 'mongo-orchestration']
+dependency_links = [
+    'git+git://github.com/ajdavis/mongo-mockup-db#egg=mockupdb',
+]
 
 test_requirements = []
 
@@ -35,6 +38,7 @@ setup(
     package_dir={'conduction': 'conduction'},
     include_package_data=True,
     install_requires=requirements,
+    dependency_links=dependency_links,
     license="Apache License, Version 2.0",
     zip_safe=False,
     keywords='mongo-conduction',
