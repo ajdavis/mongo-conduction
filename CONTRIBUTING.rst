@@ -82,6 +82,8 @@ Ready to contribute? Here's how to set up `mongo-conduction` for local developme
 
    To get flake8 and tox, just pip install them into your virtualenv.
 
+   See the guide to :doc:`testing`.
+
 6. Commit your changes and push your branch to GitHub::
 
     $ git add .
