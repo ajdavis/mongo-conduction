@@ -123,7 +123,7 @@ def main_loop(mockup):
                 # Or: {post: "/servers", body: {preset: "basic.json"}}
                 method = req.command_name.lower()
                 path = req.doc[req.command_name]
-                body = req.doc.get('body', '{}')
+                body = req.doc.get('body', {})
 
                 # Trick Bottle into thinking the wire protocol command's
                 # "body" subdocument is a JSON string that is the HTTP
